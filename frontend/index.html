@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intelligent Traffic Management System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-icon">🚦</span><div><b><span>TRAFFIC</span></b><small>CONTROL CENTER</small></div></div>
+    <div class="side-label">MAIN MENU</div>
+    <a class="nav-link active" href="#overview">▦ &nbsp; Dashboard</a>
+    <a class="nav-link" href="#signals">🚦 &nbsp; Traffic Signals</a>
+    <a class="nav-link" href="#roads">⌘ &nbsp; Road Network</a>
+    <a class="nav-link" href="#routes">➜ &nbsp; Route Finder</a>
+    <a class="nav-link" href="#emergency">🚑 &nbsp; Emergency Vehicles</a>
+    <div class="sidebar-bottom"><span class="live-dot"></span> SYSTEM ONLINE<small>Prototype interface · Local mode</small></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><div class="eyebrow">SMART CITY / TRAFFIC OPERATIONS</div><h1>Traffic Control Dashboard</h1></div>
+      <div class="top-status"><span class="live-dot"></span> All systems operational <span class="date" id="today"></span></div>
+    </header>
+
+    <section id="overview" class="stats">
+      <article class="stat-card"><div class="stat-top">TOTAL INTERSECTIONS <span>⌖</span></div><strong>05</strong><small>Connected nodes</small></article>
+      <article class="stat-card"><div class="stat-top">ROAD CONNECTIONS <span>↔</span></div><strong id="roadCount">07</strong><small>Available network links</small></article>
+      <article class="stat-card"><div class="stat-top">CLOSED ROADS <span>⛔</span></div><strong id="closedCount">00</strong><small>Currently blocked</small></article>
+      <article class="stat-card"><div class="stat-top">EMERGENCY QUEUE <span>🚨</span></div><strong id="queueCount">00</strong><small>Vehicles waiting</small></article>
+    </section>
+
+    <section class="panel" id="signals">
+      <div class="section-head"><div><div class="eyebrow">LIVE SIGNAL CONTROL</div><h2>Adaptive Traffic Signals</h2></div><span class="pill green">● ACTIVE</span></div>
+      <p class="muted">Enter the number of waiting vehicles in each direction to calculate green-light duration.</p>
+      <div class="signal-grid">
+        <label>North <input type="number" min="0" id="north" value="12"></label>
+        <label>South <input type="number" min="0" id="south" value="8"></label>
+        <label>East <input type="number" min="0" id="east" value="18"></label>
+        <label>West <input type="number" min="0" id="west" value="6"></label>
+      </div>
+      <button class="btn primary" id="calculateSignals">Calculate Green Time</button>
+      <div class="signal-results" id="signalResults">
+        <div class="signal-result"><span>North</span><b>— sec</b><div class="bar"><i></i></div></div>
+        <div class="signal-result"><span>South</span><b>— sec</b><div class="bar"><i></i></div></div>
+        <div class="signal-result"><span>East</span><b>— sec</b><div class="bar"><i></i></div></div>
+        <div class="signal-result"><span>West</span><b>— sec</b><div class="bar"><i></i></div></div>
+      </div>
+    </section>
+
+    <section class="two-col">
+      <div class="panel" id="roads">
+        <div class="section-head"><div><div class="eyebrow">NETWORK STATUS</div><h2>Road Network</h2></div><span class="pill blue">5 NODES · 7 ROADS</span></div>
+        <div class="network-wrap">
+          <svg class="network" viewBox="0 0 520 250" role="img" aria-label="Five intersection road network">
+            <g id="roadLines" stroke="#35465a" stroke-width="8" stroke-linecap="round"></g>
+            <g id="roadNodes"></g>
+          </svg>
+          <div class="legend"><span><i class="legend-open"></i> Open</span><span><i class="legend-closed"></i> Closed</span><span><i class="legend-node"></i> Intersection</span></div>
+        </div>
+        <div class="road-list" id="roadList"></div>
+      </div>
+
+      <div class="panel" id="routes">
+        <div class="section-head"><div><div class="eyebrow">INTELLIGENT NAVIGATION</div><h2>Fastest Route Finder</h2></div><span class="pill purple">DIJKSTRA</span></div>
+        <p class="muted">Find the fastest available route while avoiding closed roads.</p>
+        <div class="form-row"><label>Source<select id="source"></select></label><label>Destination<select id="destination"></select></label></div>
+        <button class="btn primary full" id="findRoute">Find Fastest Route</button>
+        <div class="route-output" id="routeOutput"><div class="empty-icon">➜</div><span>Select intersections to calculate a route.</span></div>
+        <div class="subheading">UPDATE ROAD CONDITION</div>
+        <div class="form-row"><label>Road<select id="roadSelect"></select></label><label>Traffic<select id="trafficLevel"><option value="1">Low</option><option value="2">Medium</option><option value="3">High</option></select></label></div>
+        <div class="form-row"><button class="btn secondary full" id="updateTraffic">Update Traffic</button><button class="btn danger full" id="toggleClosure">Close / Reopen</button></div>
+      </div>
+    </section>
+
+    <section class="panel" id="emergency">
+      <div class="section-head"><div><div class="eyebrow">PRIORITY RESPONSE</div><h2>Emergency Vehicle Management</h2></div><span class="pill red">HIGH PRIORITY</span></div>
+      <div class="emergency-form">
+        <label>Vehicle type<select id="vehicleType"><option value="Ambulance">Ambulance (Priority 1)</option><option value="Fire Engine">Fire Engine (Priority 2)</option><option value="Police Vehicle">Police Vehicle (Priority 3)</option></select></label>
+        <label>Current intersection<select id="emSource"></select></label>
+        <label>Destination<select id="emDestination"></select></label>
+        <button class="btn primary" id="addEmergency">+ Add Vehicle</button>
+      </div>
+      <div class="queue-head"><b>Emergency Queue</b><span class="muted" id="queueLabel">0 vehicles waiting</span></div>
+      <div id="queueList" class="queue-list"><div class="empty-state">No emergency vehicles in the queue.</div></div>
+      <button class="btn secondary" id="processEmergency">Process Next Emergency Vehicle</button>
+      <div id="emergencyMessage" class="message" aria-live="polite"></div>
+    </section>
+    <footer>INTELLIGENT TRAFFIC MANAGEMENT AND EMERGENCY ROUTING SYSTEM <span>FRONTEND DEMO</span></footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

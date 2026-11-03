@@ -2,15 +2,24 @@
 #ifndef ROAD_NETWORK_H
 #define ROAD_NETWORK_H
 
+#include <iostream>
 #include <vector>
+#include <string>
 
 using namespace std;
 
 struct Road {
     int destination;
     int distance;
-    int trafficLevel; // 1 = Low, 2 = Medium, 3 = High
+    int trafficLevel;
     bool closed;
+};
+
+struct RouteResult {
+    bool found = false;
+    vector<int> path;
+    double totalDistance = 0;
+    double travelTime = 0;
 };
 
 class RoadNetwork {
@@ -27,9 +36,14 @@ public:
     void setTrafficLevel(int u, int v, int level);
     void setRoadClosure(int u, int v, bool close);
 
-   bool shortestPath(int source, int destination);
+    RouteResult findShortestRoute(int source, int destination);
+    bool shortestPath(int source, int destination);
+
+    const vector<vector<Road>>& getRoads() const;
+    int getIntersections() const;
 };
 
 #endif
+
 
 

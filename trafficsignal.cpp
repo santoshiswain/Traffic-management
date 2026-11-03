@@ -54,5 +54,18 @@ void TrafficSignal::displaySignal() {
              << greenTime[i] << " seconds\n";
     }
 }
+int TrafficSignal::getVehicleCount(int direction) {
+    if (direction >= 0 && direction < 4) {
+        return vehicles[direction];
+    }
+    return -1;
+}
+
+int TrafficSignal::getGreenTime(int direction) {
+    if (direction >= 0 && direction < 4) {
+        return greenTime[direction];
+    }
+    return -1;
+}
 
 

@@ -1,10 +1,11 @@
 
-#ifndef EMERGENCY_VEHICLE_H
-#define EMERGENCY_VEHICLE_H
+#ifndef EV_H
+#define EV_H
 
-#include <string>
+#include <iostream>
 #include <queue>
 #include <vector>
+#include <string>
 #include "roadNetwork.h"
 
 using namespace std;
@@ -16,9 +17,14 @@ struct EmergencyVehicle {
     int priority;
 };
 
+struct EmergencyProcessResult {
+    bool processed = false;
+    EmergencyVehicle vehicle;
+    RouteResult route;
+};
+
 struct ComparePriority {
-    bool operator()(const EmergencyVehicle& a,
-                    const EmergencyVehicle& b) const {
+    bool operator()(EmergencyVehicle a, EmergencyVehicle b) {
         return a.priority > b.priority;
     }
 };
@@ -32,18 +38,18 @@ private:
     > vehicles;
 
 public:
-    void addVehicle(
-        string type,
-        int current,
-        int destination,
-        int priority
-    );
+    void addVehicle(string type, int current, int destination, int priority);
 
     void displayQueue();
 
-    void processNext(RoadNetwork& network);
+    vector<EmergencyVehicle> getQueue() const;
+
+    EmergencyProcessResult processNext(RoadNetwork &network);
+
+    bool isEmpty() const;
 };
 
 #endif
+
 
 

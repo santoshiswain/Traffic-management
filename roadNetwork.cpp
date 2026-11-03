@@ -1,12 +1,8 @@
 
-#include <iostream>
+#include "roadNetwork.h"
 #include <queue>
 #include <algorithm>
-#include <string>
-#include <utility>
-#include "roadNetwork.h"
-
-using namespace std;
+#include <limits>
 
 RoadNetwork::RoadNetwork(int n) {
     intersections = n;
@@ -22,117 +18,62 @@ RoadNetwork::RoadNetwork(int n) {
 }
 
 void RoadNetwork::addRoad(int u, int v, int distance) {
-    if (u < 0 || u >= intersections ||
-        v < 0 || v >= intersections ||
-        distance <= 0 || u == v) {
-        cout << "Invalid road details.\n";
-        return;
-    }
-
-    // A new road is open by default.
     roads[u].push_back({v, distance, 1, false});
     roads[v].push_back({u, distance, 1, false});
 }
 
 void RoadNetwork::displayRoads() {
-    string levels[] = {"", "Low", "Medium", "High"};
-
-    cout << "\n--- Road Network ---\n";
-
     for (int i = 0; i < intersections; i++) {
-        for (const Road& road : roads[i]) {
+        for (auto road : roads[i]) {
             if (i < road.destination) {
-                cout << i << " <-> " << road.destination
-                     << " | Distance: " << road.distance << " km"
-                     << " | Traffic: " << levels[road.trafficLevel]
-                     << " | Status: "
-                     << (road.closed ? "CLOSED" : "OPEN")
-                     << '\n';
+                cout << i << " -> " << road.destination
+                     << " Distance: " << road.distance
+                     << " Traffic: " << road.trafficLevel
+                     << " Closed: " << road.closed << endl;
             }
         }
     }
 }
 
 void RoadNetwork::setTrafficLevel(int u, int v, int level) {
-    if (u < 0 || u >= intersections ||
-        v < 0 || v >= intersections ||
-        level < 1 || level > 3 || u == v) {
-        cout << "Invalid intersection or traffic level.\n";
-        return;
-    }
-
-    bool found = false;
-
-    for (Road& road : roads[u]) {
+    for (auto &road : roads[u]) {
         if (road.destination == v) {
             road.trafficLevel = level;
-            found = true;
         }
     }
 
-    for (Road& road : roads[v]) {
+    for (auto &road : roads[v]) {
         if (road.destination == u) {
             road.trafficLevel = level;
         }
-    }
-
-    if (found) {
-        cout << "Traffic level updated successfully.\n";
-    } else {
-        cout << "No road connects these intersections.\n";
     }
 }
 
 void RoadNetwork::setRoadClosure(int u, int v, bool close) {
-    if (u < 0 || u >= intersections ||
-        v < 0 || v >= intersections || u == v) {
-        cout << "Invalid intersection numbers.\n";
-        return;
-    }
-
-    bool found = false;
-
-    for (Road& road : roads[u]) {
+    for (auto &road : roads[u]) {
         if (road.destination == v) {
             road.closed = close;
-            found = true;
         }
     }
 
-    for (Road& road : roads[v]) {
+    for (auto &road : roads[v]) {
         if (road.destination == u) {
             road.closed = close;
         }
     }
-
-    if (!found) {
-        cout << "No road connects these intersections.\n";
-    } else if (close) {
-        cout << "Road closed successfully.\n";
-    } else {
-        cout << "Road reopened successfully.\n";
-    }
 }
 
-bool RoadNetwork::shortestPath(int source, int destination){
-    if (source < 0 || source >= intersections ||
-        destination < 0 || destination >= intersections) {
-        cout << "Invalid intersection number.\n";
-        return false;
+RouteResult RoadNetwork::findShortestRoute(int source, int destination) {
+    RouteResult result;
+
+    if (source < 0 || destination < 0 ||
+        source >= intersections || destination >= intersections) {
+        return result;
     }
 
-    if (source == destination) {
-        cout << "You are already at the destination.\n";
-        cout << "Estimated travel time: 0 minutes\n";
-        return true;
-    }
+    const double INF = numeric_limits<double>::max();
 
-    // Estimated speed in km/h for each traffic level.
-    double speed[] = {0, 40.0, 25.0, 10.0};
-
-    const double INF = 1e18;
-
-    vector<double> time(intersections, INF);
+    vector<double> dist(intersections, INF);
     vector<int> parent(intersections, -1);
 
     priority_queue<
@@ -141,66 +82,113 @@ bool RoadNetwork::shortestPath(int source, int destination){
         greater<pair<double, int>>
     > pq;
 
-    time[source] = 0;
+    dist[source] = 0;
     pq.push({0, source});
 
     while (!pq.empty()) {
-        double currentTime = pq.top().first;
         int u = pq.top().second;
+        double currentCost = pq.top().first;
         pq.pop();
 
-        if (currentTime > time[u]) {
+        if (currentCost > dist[u]) {
             continue;
         }
 
-        for (const Road& road : roads[u]) {
-            // Never use a closed road.
+        for (auto road : roads[u]) {
             if (road.closed) {
                 continue;
             }
 
-            int v = road.destination;
+            double speed;
 
-            double travelTime =
-                road.distance / speed[road.trafficLevel];
+            if (road.trafficLevel == 1) {
+                speed = 40;
+            }
+            else if (road.trafficLevel == 2) {
+                speed = 25;
+            }
+            else {
+                speed = 10;
+            }
 
-            if (time[u] + travelTime < time[v]) {
-                time[v] = time[u] + travelTime;
-                parent[v] = u;
-                pq.push({time[v], v});
+            double time = (road.distance / speed) * 60.0;
+            double newCost = dist[u] + time;
+
+            if (newCost < dist[road.destination]) {
+                dist[road.destination] = newCost;
+                parent[road.destination] = u;
+
+                pq.push({newCost, road.destination});
             }
         }
     }
 
-   if (time[destination] == INF) {
-    cout << "No route available! All possible routes "
-         << "may be blocked.\n";
-    return false;
-}
+    if (dist[destination] == INF) {
+        return result;
+    }
 
     vector<int> path;
 
-    for (int current = destination;
-         current != -1;
-         current = parent[current]) {
+    int current = destination;
+
+    while (current != -1) {
         path.push_back(current);
+        current = parent[current];
     }
 
     reverse(path.begin(), path.end());
 
-    cout << "\nFastest available route: ";
+    result.found = true;
+    result.path = path;
+    result.travelTime = dist[destination];
 
-    for (int i = 0; i < static_cast<int>(path.size()); i++) {
-        cout << path[i];
+    for (int i = 0; i < (int)path.size() - 1; i++) {
+        int u = path[i];
+        int v = path[i + 1];
 
-        if (i + 1 < static_cast<int>(path.size())) {
+        for (auto road : roads[u]) {
+            if (road.destination == v) {
+                result.totalDistance += road.distance;
+                break;
+            }
+        }
+    }
+
+    return result;
+}
+
+bool RoadNetwork::shortestPath(int source, int destination) {
+    RouteResult result = findShortestRoute(source, destination);
+
+    if (!result.found) {
+        cout << "No route available!" << endl;
+        return false;
+    }
+
+    cout << "Shortest Route: ";
+
+    for (int i = 0; i < (int)result.path.size(); i++) {
+        cout << result.path[i];
+
+        if (i != (int)result.path.size() - 1) {
             cout << " -> ";
         }
     }
 
-    cout << "\nEstimated travel time: "
-         << time[destination] * 60.0 << " minutes\n";
-         return true;
+    cout << endl;
+    cout << "Distance: " << result.totalDistance << " km" << endl;
+    cout << "Travel Time: " << result.travelTime << " minutes" << endl;
+
+    return true;
 }
+
+const vector<vector<Road>>& RoadNetwork::getRoads() const {
+    return roads;
+}
+
+int RoadNetwork::getIntersections() const {
+    return intersections;
+}
+
 
 

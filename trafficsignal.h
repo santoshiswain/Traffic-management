@@ -13,6 +13,9 @@ public:
     void setVehicleCount(int direction, int count);
     void calculateGreenTime();
     void displaySignal();
+
+    int getVehicleCount(int direction);
+    int getGreenTime(int direction);
 };
 
 #endif
